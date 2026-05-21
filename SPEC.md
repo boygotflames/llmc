@@ -409,8 +409,11 @@ vars:
 
 ## Shadow Representation
 
-The v0 transpiler emits a Shadow target intended as a compact,
-deterministic, machine-facing representation of a `.llm` document.
+The v0 transpiler emits a Shadow target as a compact, deterministic
+encoding of a `.llm` document. Shadow output is stable and backwards
+compatible, but is NOT the recommended target for production API use.
+For actual API calls, use `--target anthropic-messages` or
+`--target openai-chat` (Track J, v5), which emit provider-native JSON.
 
 This specification describes the `v0` shadow format. It is implemented
 by `src/transpile/shadow.rs` and covered by the conformance suite in
@@ -705,6 +708,7 @@ so readers know they are intentionally deferred, not overlooked.
   `anthropic` uses the V1 XML-tag shadow encoding with the `o200k_base`
   tokenizer profile. See [Provider Profiles](#provider-profiles) and
   [V1 Anthropic Shadow Encoding](#v1-anthropic-shadow-encoding).
-- **Includes/imports and multi-file composition** — Deferred to post-v0.
-  Each `.llm` document is a standalone unit at v0. Cross-file references
-  are not part of the v0 contract.
+- **Includes/imports and multi-file composition** — Implemented and stable
+  in v4. See [Multi-file Includes](#multi-file-includes) for the full
+  specification. Cross-file composition, merge semantics, circular detection,
+  and conformance coverage are all complete.

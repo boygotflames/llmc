@@ -2,7 +2,7 @@
 
 ## Current Version
 
-This project is at **v0**.
+This project is at **v5** (in progress).
 
 v0 is an intentional designation, not a placeholder. It means:
 

@@ -400,3 +400,24 @@ Post-v4 tracks (v5 candidates):
 - Full LSP server
 - Marketplace publication
 - vars chaining (if use cases emerge)
+
+---
+
+## v5
+
+See [docs/v5-roadmap.md](docs/v5-roadmap.md).
+
+Direction: pivot from format evangelism to practical tooling. Native
+provider JSON targets, live execution, prompt linting.
+
+Active track: Track J — native provider JSON targets
+
+Estimated packets:
+- Packet 38: Track J — anthropic-messages + openai-chat native JSON targets (2-3 days)
+- Packet 39: Track K Part 1 — reqwest HTTP client, run command scaffold, API key handling
+- Packet 40: Track K Part 2 — response validation against output: schema, exit codes
+- Packet 41: Track L Part 1 — lint command, first 5 prompt quality rules
+- Packet 42: Track L Part 2 — provider-specific rules, contradiction detection
+- Packet 43: v5 declaration, README final pass, release
+
+Total: ~6-7 packets

@@ -1,278 +1,214 @@
 <p align="center">
   <img src="assets/Promptus.svg" width="220"
-       alt="Promptus — .llm transpiler" />
+       alt="promptus-dsl" />
 </p>
 <p align="center">
-  <a href="https://github.com/boygotflames/llmc/releases">
-    <img src="https://img.shields.io/github/v/release/boygotflames/llmc?label=version&color=0057FF"
+  <a href="https://github.com/boygotflames/promptus-dsl/releases">
+    <img src="https://img.shields.io/github/v/release/boygotflames/promptus-dsl?label=version&color=0057FF"
          alt="Latest release" />
   </a>
-  <a href="https://github.com/boygotflames/llmc/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/boygotflames/llmc/ci.yml?label=CI&branch=main"
+  <a href="https://github.com/boygotflames/promptus-dsl/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/boygotflames/promptus-dsl/ci.yml?label=CI&branch=main"
          alt="CI status" />
   </a>
 </p>
 <br>
 
-# `.llm` Transpiler
+# promptus-dsl
 
-`.llm` is a spec-first prompt and configuration format for LLM-oriented workflows, paired with a Rust reference implementation that parses, validates, formats, benchmarks, and transpiles `.llm` documents into deterministic machine-facing outputs.
+**A prompt compiler for LLM workflows.**
 
-## What Problem It Solves
+Write structured prompts in `.llm` files. Validate them
+before spending tokens. Compile them to the exact JSON
+format each provider API expects.
 
-Markdown is readable, but it is a poor systems language for prompt orchestration. It is permissive, presentation-oriented, and structurally noisy. This repository explores a stricter alternative:
+```
+agent: SentimentAnalyzer
+system:
+  role: classifier
+  instruction: "Classify the input as positive, negative, or neutral."
+user: "{input_text}"
+output:
+  sentiment: "one of: positive, negative, neutral"
+  confidence: "float between 0 and 1"
+vars:
+  input_text: "The product broke on day one."
+```
 
-- a human-readable surface DSL for authoring
-- a deterministic compiler pipeline
-- compact machine-facing output targets
-- measurable benchmarking against explicit baselines
+```powershell
+# Validate before you spend
+llm_format validate sentiment.llm
+
+# Compile to Anthropic's native API format
+llm_format transpile sentiment.llm --target anthropic-messages
+
+# Compile to OpenAI's chat format
+llm_format transpile sentiment.llm --target openai-chat
+```
+
+## The Problem
+
+Prompts live as raw strings scattered across codebases. No validation
+before execution. No reuse. No clear separation between what you write
+and what the API receives.
+
+promptus-dsl gives prompts the same discipline as code: structure,
+validation, versioning, and composability.
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs/) (stable toolchain, 2021 edition or later)
-- Cargo (included with Rust)
+- [Rust](https://rustup.rs/) (stable, 2021 edition or later)
 
-### Build and test
+### Build
 
 ```powershell
-git clone https://github.com/boygotflames/llmc
-cd llmc
-cargo build
+git clone https://github.com/boygotflames/promptus-dsl
+cd promptus-dsl
+cargo build --release
 cargo test
 ```
 
-### Run the CLI
+### Your first prompt
 
 ```powershell
-# Parse a .llm file and inspect the AST
-cargo run -- parse examples/minimal.llm
-
-# Validate a .llm file
 cargo run -- validate examples/minimal.llm
-
-# Transpile to plain text output
 cargo run -- transpile examples/minimal.llm --target plain
-
-# Transpile to JSON intermediate representation
 cargo run -- transpile examples/minimal.llm --target json-ir
-
-# Transpile to shadow representation (provisional)
-cargo run -- transpile examples/minimal.llm --target shadow
-
-# Format a .llm file to canonical form
-cargo run -- fmt examples/noncanonical/messy.llm
-
-# Benchmark token usage
-cargo run -- bench examples/minimal.llm --baseline examples/baselines/minimal.md
 ```
 
-## What Currently Works
+## What the Compiler Does
 
-- Surface parsing for reserved top-level keys:
-  - `agent`
-  - `system`
-  - `user`
-  - `memory`
-  - `tools`
-  - `output`
-  - `constraints`
-  - `vars`
-- indentation-based structure with mappings, sequences, comments, and quoted scalars
-- span-aware syntax diagnostics
-- first-pass semantic validation
-- deterministic output targets:
-  - `plain`
-  - `json-ir`
-  - provisional `shadow`
-- canonical formatting with 2-space indentation
-- token counting and comparison against explicit baseline text files
-- minimal VS Code file association and syntax highlighting
+### validate
 
-## Example: Input and Output
+Catches problems before you spend tokens:
 
-Given `examples/minimal.llm`:
-
-```
-agent: DataExtractor
-system:
-  role: financial_analyst
-  output: json
-memory:
-  - user_history
-```
-
-**`--target plain`** (stable) — canonical normalized surface form:
-
-```
-agent: DataExtractor
-system:
-  role: financial_analyst
-  output: json
-memory:
-  - user_history
-```
-
-**`--target json-ir`** (stable) — deterministic JSON intermediate representation:
-
-```json
-{
-  "agent": "DataExtractor",
-  "system": {
-    "role": "financial_analyst",
-    "output": "json"
-  },
-  "memory": [
-    "user_history"
-  ]
-}
-```
-
-**`--target shadow`** (provisional) — compact machine-facing representation:
-
-```
-@a="DataExtractor"
-@s={role="financial_analyst";output="json"}
-@m=["user_history"]
-```
-
-**Benchmark against `examples/baselines/minimal.md`:**
-
-```
-provider: generic
-tokenizer: cl100k_base
-source  | bytes=95  | tokens=27 | delta_bytes=+0  | delta_tokens=+0
-plain   | bytes=94  | tokens=26 | delta_bytes=-1  | delta_tokens=-1
-json-ir | bytes=141 | tokens=46 | delta_bytes=+46 | delta_tokens=+19
-shadow  | bytes=82  | tokens=23 | delta_bytes=-13 | delta_tokens=-4
-```
-
-## Token Efficiency
-
-One of the core goals of `.llm` is to reduce token overhead compared
-to Markdown-based prompting. The built-in `bench` command measures
-this directly.
-
-Benchmarked against honest Markdown equivalents of each example
-(using the cl100k tokenizer):
-
-| Fixture | Markdown tokens | Shadow tokens | Savings |
-|---|---|---|---|
-| minimal | 27 | 23 | 14.8% |
-| extractor | 54 | 49 | 9.3% |
-| json-output | 41 | 39 | 4.9% |
-| quoted | 42 | 39 | 7.1% |
-| code-reviewer | 80 | 75 | 6.3% |
-| data-pipeline | 67 | 61 | 9.0% |
-| support-agent | 77 | 71 | 7.8% |
-| **average** | | | **8.5%** |
-
-Run the benchmark yourself:
+- Missing required keys (`agent`, `system`)
+- Type mismatches (sequence where scalar expected)
+- Empty required fields
+- Undefined `{var}` references
+- Circular includes
+- Merge conflicts in multi-file prompts
 
 ```powershell
-cargo run -- bench examples/extractor.llm \
-  --baseline examples/baselines/extractor.md
+cargo run -- validate myprompt.llm
+# ✓ valid  myprompt.llm
+# OR
+# semantic error at 3:1: [E101] missing required key: `system`
+# ✗ invalid  myprompt.llm  (1 error(s))
 ```
 
-Token counts use the cl100k tokenizer (GPT-4 / Claude compatible).
-Savings vary by document complexity and content density.
+### transpile
 
-Note: the generic/openai V0 shadow encoding is optimized for token
-efficiency. The anthropic V1 XML encoding prioritizes model
-comprehension over token count — XML tags are larger than @-markers.
-Choose the provider profile that matches your target model.
+Compiles to output targets:
 
-## Current Scope
+```powershell
+# Plain normalized text
+cargo run -- transpile prompt.llm --target plain
 
-This repository currently acts as a reference implementation and proving ground for the v0 `.llm` language slice documented in [SPEC.md](SPEC.md).
+# JSON intermediate representation
+cargo run -- transpile prompt.llm --target json-ir
 
-The main public documents are:
+# Shadow compact encoding (stable, backwards compatible)
+cargo run -- transpile prompt.llm --target shadow
+cargo run -- transpile prompt.llm --target shadow --provider anthropic
+```
 
-- [Mission.md](Mission.md)
-- [Plan.md](Plan.md)
-- [SPEC.md](SPEC.md)
-- [docs/compatibility-matrix.md](docs/compatibility-matrix.md)
+### fmt
 
-## Public Contract Status
+Canonical formatting — normalize any `.llm` file:
 
-The current public contract boundary is intentionally split rather than treated as one giant frozen promise.
+```powershell
+cargo run -- fmt myprompt.llm
+```
 
-- `stable`
-  - surface syntax
-  - canonical formatter behavior
-  - `plain` output
-  - `json-ir` output
-- `provisional`
-  - `shadow` output
-  - `bench` report shape
-- `partial`
-  - semantic validation breadth
-  - provider-specific profile behavior
-  - VS Code support
-- `unsupported`
-  - provider profiles without an explicit supported tokenizer/shadow path, currently `anthropic`
+### bench
 
-See [docs/compatibility-matrix.md](docs/compatibility-matrix.md) for the public matrix and contract notes.
+Token count analysis against a Markdown baseline:
 
-## Provider Support Truth
+```powershell
+cargo run -- bench myprompt.llm --baseline baseline.md
+```
 
-Provider-aware behavior is intentionally narrow right now.
+## Format Reference
 
-- `generic`
-  - default provider profile
-  - supported for `shadow` and `bench`
-- `openai`
-  - explicitly selectable
-  - currently shares the same provisional shadow behavior as `generic`
-  - bench uses the same current tokenizer path as the generic/default flow
-- `anthropic`
-  - explicitly unsupported in current provider-aware flows
+### Required keys
 
-This repo does not make claims of universal token behavior across providers.
+- `agent` — identity of this prompt/agent
+- `system` — instructions for the model
 
-## Editor Support Truth
+### Optional keys
 
-Minimal VS Code support lives under [editors/vscode](editors/vscode).
+- `user` — user turn content
+- `memory` — context items (sequence)
+- `tools` — available tools (sequence)
+- `output` — expected output schema
+- `constraints` — behavioral rules (sequence)
+- `vars` — template variables for `{var_name}` expansion
 
-Current editor support includes:
+### Multi-file composition
 
-- `.llm` file association
-- syntax highlighting
-- basic language configuration
+```
+include: shared/base-system.llm
 
-Current editor support does not include:
+system:
+  objective: "Answer questions about billing."
 
-- LSP
-- live validation
-- completion
-- hover help
-- formatter-on-save integration
+vars:
+  product_name: "Acme Pro"
+```
 
-## Non-Goals Right Now
+### Variable expansion
 
-- remote provider execution
-- cloud routing or orchestration
-- API key/auth flows
-- provider-specific runtime adapters beyond narrow profile plumbing
-- language server implementation
-- editor automation beyond minimal syntax support
-- finalized public output compatibility guarantees for provisional targets
+```
+system: "You handle {product_name} support for {region}."
+vars:
+  product_name: Acme
+  region: EU
+```
+
+Variables expand at transpile time in all output targets.
+
+## VS Code Extension
+
+Install from `editors/vscode/` for:
+
+- Syntax highlighting
+- Live validation (inline error squiggles as you type)
+- Completion for all keys and `{var}` references
+- Hover documentation
+- Go-to-definition for `{var}` references
+- `{var}` expanded values as ghost text
+- Format on save
+
+## Provider Support
+
+| Provider | Shadow encoding | Tokenizer |
+|---|---|---|
+| `generic` (default) | V0 `@`-marker | cl100k_base |
+| `openai` | V0 `@`-marker | cl100k_base |
+| `anthropic` | V1 XML-tag | o200k_base |
+
+All three providers are stable. Use `--provider anthropic` for
+Anthropic-optimized shadow output and `o200k_base` token counts.
+
+## Diagnostic Codes
+
+All errors carry structured codes (`E001`–`E116`).
+See [SPEC.md](SPEC.md) for the full reference.
 
 ## Repository Layout
 
-- [assets](assets): project logo and visual identity sources
-- [src](src): compiler, CLI, formatter, bench, provider, and transpile code
-- [tests](tests): deterministic behavior coverage
-- [examples](examples): valid, invalid, noncanonical, and benchmark baseline fixtures
-- [editors/vscode](editors/vscode): minimal VS Code support package
-- [docs](docs): compatibility matrix, versioning strategy
+- [`src/`](src): compiler — lexer, parser, AST, validator, transpile targets, CLI, bench
+- [`tests/`](tests): conformance suite (131 tests)
+- [`examples/`](examples): valid, invalid, and baseline fixtures
+- [`editors/vscode/`](editors/vscode): VS Code extension
+- [`docs/`](docs): compatibility matrix, versioning, roadmaps
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for scope, development workflow, commit style, and the public contract stability model.
-
-Before submitting anything, run:
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```powershell
 cargo fmt
@@ -280,10 +216,6 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 ```
 
-All three must be clean.
+## Changelog
 
-## Status Note
-
-The project is real, useful, and increasingly disciplined, but it is still in a standardization-prep phase. Treat current behavior as implemented reality, not as a forever-frozen contract unless the spec explicitly says so.
-
-See [CHANGELOG.md](CHANGELOG.md) for the full version history from v1 through v4.
+See [CHANGELOG.md](CHANGELOG.md) for the full version history (v1–v4).
