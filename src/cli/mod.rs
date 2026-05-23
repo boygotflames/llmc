@@ -4,6 +4,7 @@ use clap::{Parser, Subcommand};
 pub mod bench;
 pub mod fmt;
 pub mod parse;
+pub mod run;
 pub mod transpile;
 pub mod validate;
 
@@ -21,6 +22,7 @@ enum Command {
     Transpile(transpile::TranspileArgs),
     Fmt(fmt::FmtArgs),
     Bench(bench::BenchArgs),
+    Run(run::RunArgs),
 }
 
 pub fn run() -> Result<()> {
@@ -32,5 +34,6 @@ pub fn run() -> Result<()> {
         Command::Transpile(args) => transpile::run(args),
         Command::Fmt(args) => fmt::run(args),
         Command::Bench(args) => bench::run(args),
+        Command::Run(args) => run::run(args),
     }
 }
