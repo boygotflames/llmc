@@ -119,6 +119,39 @@ cargo run -- transpile prompt.llm --target openai-chat
 cargo run -- transpile prompt.llm --target anthropic-messages
 ```
 
+### run
+
+Execute a prompt against a live API:
+
+```powershell
+# Run against Anthropic (uses ANTHROPIC_API_KEY env var)
+cargo run -- run examples/minimal.llm `
+  --provider anthropic `
+  --model claude-3-5-sonnet-20241022
+
+# Run against OpenAI (uses OPENAI_API_KEY env var)
+cargo run -- run examples/minimal.llm `
+  --provider openai `
+  --model gpt-4o
+
+# Pass the API key explicitly
+cargo run -- run examples/minimal.llm `
+  --provider anthropic `
+  --model claude-3-5-sonnet-20241022 `
+  --key $env:MY_KEY
+
+# Preview the API payload without sending (no key needed)
+cargo run -- run examples/minimal.llm `
+  --provider openai --model gpt-4o --dry-run
+```
+
+The `run` command validates the file first, then transpiles
+to the provider's native JSON format, injects `model` and
+`max_tokens`, and POSTs to the API. Response is printed as
+pretty JSON. If the document declares an `output:` schema
+and the response is JSON, missing fields are reported as
+warnings.
+
 ### fmt
 
 Canonical formatting — normalize any `.llm` file:

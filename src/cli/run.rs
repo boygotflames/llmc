@@ -8,6 +8,7 @@ use clap::{Args, ValueEnum};
 use reqwest::blocking::Client;
 use serde_json::Value;
 
+use crate::ast::Document;
 use crate::parser::parse_str;
 use crate::provider::Provider;
 use crate::transpile::{self, Target};
@@ -48,6 +49,10 @@ pub struct RunArgs {
     /// Maximum tokens to generate. Required by Anthropic; ignored by OpenAI.
     #[arg(long, default_value_t = 1024)]
     pub max_tokens: u32,
+
+    /// Print the API payload without sending it. Useful for debugging.
+    #[arg(long, default_value_t = false)]
+    pub dry_run: bool,
 }
 
 pub fn run(args: RunArgs) -> Result<()> {
@@ -95,10 +100,24 @@ pub fn run(args: RunArgs) -> Result<()> {
     let body = serde_json::to_string(&json_payload)
         .map_err(|e| anyhow!("failed to serialize request body: {}", e))?;
 
-    // 6. Resolve API key
+    // 6. Dry-run: print payload and exit without sending (no API key needed)
+    if args.dry_run {
+        let json: Value =
+            serde_json::from_str(&body).map_err(|e| anyhow!("payload is not valid JSON: {}", e))?;
+        let pretty = serde_json::to_string_pretty(&json)
+            .map_err(|e| anyhow!("failed to pretty-print payload: {}", e))?;
+        let mut stdout = io::stdout().lock();
+        stdout
+            .write_all(pretty.as_bytes())
+            .context("failed to write payload to stdout")?;
+        stdout.write_all(b"\n").context("failed to write newline")?;
+        return Ok(());
+    }
+
+    // 7. Resolve API key
     let key = resolve_api_key(&args)?;
 
-    // 7. Send HTTP request
+    // 8. Send HTTP request
     let client = Client::new();
 
     let (url, response) = match args.provider {
@@ -127,7 +146,7 @@ pub fn run(args: RunArgs) -> Result<()> {
         }
     };
 
-    // 8. Handle response
+    // 9. Handle response
     let status = response.status();
     let response_text = response
         .text()
@@ -136,6 +155,16 @@ pub fn run(args: RunArgs) -> Result<()> {
     if status.is_success() {
         let json: Value = serde_json::from_str(&response_text)
             .map_err(|e| anyhow!("API returned invalid JSON: {}", e))?;
+
+        // Validate response against output: schema if declared
+        let missing_fields = validate_response_against_schema(&json, &document);
+        if !missing_fields.is_empty() {
+            eprintln!(
+                "warning: response missing declared output field(s): {}",
+                missing_fields.join(", ")
+            );
+        }
+
         let pretty = serde_json::to_string_pretty(&json)
             .map_err(|e| anyhow!("failed to pretty-print response: {}", e))?;
         let mut stdout = io::stdout().lock();
@@ -153,6 +182,9 @@ pub fn run(args: RunArgs) -> Result<()> {
 
 fn resolve_api_key(args: &RunArgs) -> Result<String> {
     if let Some(ref key) = args.key {
+        if key.is_empty() {
+            return Err(anyhow!("--key value is empty"));
+        }
         return Ok(key.clone());
     }
 
@@ -161,10 +193,60 @@ fn resolve_api_key(args: &RunArgs) -> Result<String> {
         RunProviderArg::Anthropic => "ANTHROPIC_API_KEY",
     };
 
-    env::var(env_var).with_context(|| {
+    let key = env::var(env_var).with_context(|| {
         format!(
             "no API key provided. Use --key or set {} environment variable",
             env_var
         )
-    })
+    })?;
+
+    if key.is_empty() {
+        return Err(anyhow!("{} environment variable is set but empty", env_var));
+    }
+
+    Ok(key)
+}
+
+/// Validate API response content against the document's `output:` schema.
+/// Returns a list of missing field names.
+/// If the document has no `output:` key, returns empty vec (no validation).
+fn validate_response_against_schema(response_json: &Value, document: &Document) -> Vec<String> {
+    use crate::ast::Node;
+
+    let output_node = match document.output.as_ref() {
+        Some(n) => n,
+        None => return vec![],
+    };
+
+    let expected_keys = match output_node {
+        Node::Mapping { entries, .. } => entries.iter().map(|e| e.key.clone()).collect::<Vec<_>>(),
+        Node::Scalar { .. } | Node::Sequence { .. } => return vec![],
+    };
+
+    // Extract the text content from the response
+    // OpenAI: response.choices[0].message.content
+    // Anthropic: response.content[0].text
+    let content_str = response_json
+        .pointer("/choices/0/message/content")
+        .or_else(|| response_json.pointer("/content/0/text"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    // Try to parse the content as JSON for field checking
+    let content_json: Option<Value> = serde_json::from_str(content_str).ok();
+
+    match content_json {
+        Some(json) => {
+            // Check each declared output key exists in response JSON
+            expected_keys
+                .into_iter()
+                .filter(|key| json.get(key).is_none())
+                .collect()
+        }
+        None => {
+            // Response is plain text, not JSON — cannot validate schema
+            // This is not an error; output: may declare intent, not structure
+            vec![]
+        }
+    }
 }

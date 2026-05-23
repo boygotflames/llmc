@@ -48,10 +48,27 @@ encoding. The .llm file becomes a clean authoring
 layer; the output is what you paste into curl.
 
 ## Track K — run Command (Live Execution)
-llm_format run myagent.llm --key $ANTHROPIC_API_KEY
-Validates, transpiles to native format, sends HTTP
-request, validates response against output: schema,
-exits with code 0/1/2.
+
+### Track K Part 1 [COMPLETE]
+- run command: parse → compose → validate → transpile
+  to native JSON → inject model → POST → print response
+- Provider support: openai (Chat Completions),
+  anthropic (Messages API)
+- API key: --key flag or OPENAI_API_KEY/ANTHROPIC_API_KEY
+  env var fallback
+- Empty key detection: set-but-empty env var rejected
+  with actionable error message
+- Validation wall: E101 fires before any network call
+
+### Track K Part 2 [COMPLETE]
+- Response schema validation against output: field;
+  warns on missing JSON fields (not an error)
+- --dry-run flag: prints API payload without sending;
+  no API key required in dry-run mode
+
+### Track K Part 3 [NEXT]
+- Timeout configuration (--timeout flag)
+- Retry logic for transient network failures
 
 ## Track L — lint Command (Prompt Quality)
 llm_format lint myprompt.llm
@@ -67,10 +84,10 @@ native JSON output, the run command has nothing real
 to send.
 
 ## v5 Success Criteria
-- [ ] anthropic-messages and openai-chat targets exist
+- [x] anthropic-messages and openai-chat targets exist
       and produce valid API payloads
-- [ ] run command executes a .llm file end-to-end
-- [ ] response validated against output: schema
+- [x] run command executes a .llm file end-to-end
+- [x] response validated against output: schema
 - [ ] lint command catches at least 5 real prompt issues
-- [ ] README describes what the tool actually does today
-- [ ] zero stale claims in any public-facing document
+- [x] README describes what the tool actually does today
+- [x] zero stale claims in any public-facing document
