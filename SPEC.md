@@ -682,6 +682,50 @@ Output:
 
 ---
 
+## Native Provider JSON Targets
+
+Track J (v5) introduces two transpile targets that emit
+provider-native JSON payloads ready for direct API calls.
+
+### openai-chat
+
+Emits JSON compatible with the OpenAI Chat Completions API.
+
+**Mapped fields:**
+- `system` → `messages[]` with `{"role": "system", "content": "..."}`
+- `user` → `messages[]` with `{"role": "user", "content": "..."}`
+- `tools` → `tools[]` with `{"type": "function", "function": {"name": "..."}}`
+
+**Mapping serialization:** when `system` or `user` is a mapping
+node, it is serialized to `key: value` lines before being placed
+in `content`.
+
+**Honest limitations (intentional deferrals):**
+- `model` — omitted; the caller must inject the model identifier
+- `memory` — role ambiguity prevents reliable mapping; deferred
+- `constraints` — no API field mapping defined; deferred
+- `output` — mapped to `response_format` in a future release
+- `agent` — developer metadata, not part of the API payload
+- Tool `parameters` schemas — bare tool names only; deferred
+
+**Stability:** stable as of v5.
+
+### anthropic-messages
+
+Emits JSON compatible with the Anthropic Messages API.
+
+**Mapped fields:**
+- `system` → top-level `"system"` string
+- `user` → `messages[]` with `{"role": "user", "content": "..."}`
+- `tools` → `tools[]` with `{"name": "...", "description": "", "input_schema": {"type": "object"}}`
+
+**Honest limitations:** same as openai-chat. Additionally:
+- `max_tokens` — omitted; the caller must inject it
+
+**Stability:** stable as of v5.
+
+---
+
 ## Deferred Work
 
 The following are explicitly out of scope for v0. They are recorded here

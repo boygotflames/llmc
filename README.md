@@ -113,6 +113,10 @@ cargo run -- transpile prompt.llm --target json-ir
 # Shadow compact encoding (stable, backwards compatible)
 cargo run -- transpile prompt.llm --target shadow
 cargo run -- transpile prompt.llm --target shadow --provider anthropic
+
+# Native provider JSON (ready for direct API calls)
+cargo run -- transpile prompt.llm --target openai-chat
+cargo run -- transpile prompt.llm --target anthropic-messages
 ```
 
 ### fmt
