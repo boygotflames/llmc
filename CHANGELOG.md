@@ -8,6 +8,46 @@ surfaces are always noted explicitly.
 
 ---
 
+## [v5] — 2026-05-25
+
+### Summary
+v5 pivots from format evangelism to practical tooling. The `.llm`
+file becomes a provider-agnostic authoring layer that compiles to
+the exact JSON format each API expects — and can execute those API
+calls directly.
+
+### What changed from v4 to v5
+- `--target anthropic-messages`: emits Anthropic Messages API JSON
+  ready for direct `curl` / API calls
+- `--target openai-chat`: emits OpenAI Chat Completions JSON
+  ready for direct `curl` / API calls
+- `run` command: parse → validate → transpile → inject model /
+  max_tokens → POST to provider API → print response; supports
+  both `--provider anthropic` and `--provider openai`
+- `--dry-run` flag: prints API payload without sending; no API key
+  required
+- Response schema validation: warns when API response JSON is
+  missing fields declared in `output:`
+- `lint` command: static analysis with 6 rules (L001–L006):
+  missing output schema, missing user turn, system too short,
+  system too long, contradictory constraints, duplicate constraints
+- Test suite expanded to 156 passing tests
+
+### Killed in v5
+- Shadow encoding removed from primary interface and README examples
+  (kept as `--target shadow` for backwards compatibility)
+- "Token savings" as the value proposition
+- "Open standard" claim
+
+### Explicit post-v5 deferrals
+- Timeout configuration (`--timeout` flag)
+- Retry logic for transient network failures
+- Provider-specific lint rules
+- Prompt injection detection
+- Semantic similarity for near-duplicate constraints
+
+---
+
 ## [v4] — 2026-04-13
 
 ### Summary

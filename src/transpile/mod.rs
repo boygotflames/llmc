@@ -3,7 +3,9 @@ use anyhow::Result;
 use crate::ast::Document;
 use crate::provider::Provider;
 
+pub mod anthropic_messages;
 pub mod json_ir;
+pub mod openai_chat;
 pub mod plain;
 pub mod shadow;
 pub mod vars;
@@ -17,6 +19,8 @@ pub enum Target {
     Plain,
     Shadow,
     JsonIr,
+    OpenAiChat,
+    AnthropicMessages,
 }
 
 pub fn transpile(document: &Document, target: Target) -> String {
@@ -33,6 +37,8 @@ pub fn transpile_with_provider(
         Target::Plain => Ok(plain::PlainEmitter.emit(document)),
         Target::Shadow => shadow::emit_with_provider(document, provider),
         Target::JsonIr => Ok(json_ir::JsonIrEmitter.emit(document)),
+        Target::OpenAiChat => Ok(openai_chat::emit(document)),
+        Target::AnthropicMessages => Ok(anthropic_messages::emit(document)),
     }
 }
 

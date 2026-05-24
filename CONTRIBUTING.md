@@ -42,8 +42,8 @@ Do not submit contributions that:
 
 - add new top-level keys or change the v0 surface syntax without a
   corresponding SPEC.md change and explicit maintainer agreement
-- change `shadow` output format (it is provisional and under active revision)
-- add new provider profiles beyond the current `generic`/`openai` stubs
+- change stable output targets (`plain`, `json-ir`, `anthropic-messages`, `openai-chat`) without a version bump and CHANGELOG entry
+- add new provider profiles beyond the current supported set (`generic`, `openai`, `anthropic`) without a corresponding transpile target implementation
 - implement LSP, remote execution, cloud routing, or API auth flows
 - introduce `unsafe` Rust without documented justification
 - change public contract behavior (syntax, `plain` output, `json-ir` output)

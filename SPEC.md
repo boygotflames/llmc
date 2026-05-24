@@ -409,8 +409,11 @@ vars:
 
 ## Shadow Representation
 
-The v0 transpiler emits a Shadow target intended as a compact,
-deterministic, machine-facing representation of a `.llm` document.
+The v0 transpiler emits a Shadow target as a compact, deterministic
+encoding of a `.llm` document. Shadow output is stable and backwards
+compatible, but is NOT the recommended target for production API use.
+For actual API calls, use `--target anthropic-messages` or
+`--target openai-chat` (Track J, v5), which emit provider-native JSON.
 
 This specification describes the `v0` shadow format. It is implemented
 by `src/transpile/shadow.rs` and covered by the conformance suite in
@@ -679,6 +682,50 @@ Output:
 
 ---
 
+## Native Provider JSON Targets
+
+Track J (v5) introduces two transpile targets that emit
+provider-native JSON payloads ready for direct API calls.
+
+### openai-chat
+
+Emits JSON compatible with the OpenAI Chat Completions API.
+
+**Mapped fields:**
+- `system` → `messages[]` with `{"role": "system", "content": "..."}`
+- `user` → `messages[]` with `{"role": "user", "content": "..."}`
+- `tools` → `tools[]` with `{"type": "function", "function": {"name": "..."}}`
+
+**Mapping serialization:** when `system` or `user` is a mapping
+node, it is serialized to `key: value` lines before being placed
+in `content`.
+
+**Honest limitations (intentional deferrals):**
+- `model` — omitted; the caller must inject the model identifier
+- `memory` — role ambiguity prevents reliable mapping; deferred
+- `constraints` — no API field mapping defined; deferred
+- `output` — mapped to `response_format` in a future release
+- `agent` — developer metadata, not part of the API payload
+- Tool `parameters` schemas — bare tool names only; deferred
+
+**Stability:** stable as of v5.
+
+### anthropic-messages
+
+Emits JSON compatible with the Anthropic Messages API.
+
+**Mapped fields:**
+- `system` → top-level `"system"` string
+- `user` → `messages[]` with `{"role": "user", "content": "..."}`
+- `tools` → `tools[]` with `{"name": "...", "description": "", "input_schema": {"type": "object"}}`
+
+**Honest limitations:** same as openai-chat. Additionally:
+- `max_tokens` — omitted; the caller must inject it
+
+**Stability:** stable as of v5.
+
+---
+
 ## Deferred Work
 
 The following are explicitly out of scope for v0. They are recorded here
@@ -705,6 +752,7 @@ so readers know they are intentionally deferred, not overlooked.
   `anthropic` uses the V1 XML-tag shadow encoding with the `o200k_base`
   tokenizer profile. See [Provider Profiles](#provider-profiles) and
   [V1 Anthropic Shadow Encoding](#v1-anthropic-shadow-encoding).
-- **Includes/imports and multi-file composition** — Deferred to post-v0.
-  Each `.llm` document is a standalone unit at v0. Cross-file references
-  are not part of the v0 contract.
+- **Includes/imports and multi-file composition** — Implemented and stable
+  in v4. See [Multi-file Includes](#multi-file-includes) for the full
+  specification. Cross-file composition, merge semantics, circular detection,
+  and conformance coverage are all complete.

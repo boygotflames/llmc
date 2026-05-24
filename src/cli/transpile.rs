@@ -15,6 +15,8 @@ pub enum TargetArg {
     Plain,
     Shadow,
     JsonIr,
+    OpenaiChat,
+    AnthropicMessages,
 }
 
 impl From<TargetArg> for Target {
@@ -23,6 +25,8 @@ impl From<TargetArg> for Target {
             TargetArg::Plain => Target::Plain,
             TargetArg::Shadow => Target::Shadow,
             TargetArg::JsonIr => Target::JsonIr,
+            TargetArg::OpenaiChat => Target::OpenAiChat,
+            TargetArg::AnthropicMessages => Target::AnthropicMessages,
         }
     }
 }

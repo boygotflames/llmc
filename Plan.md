@@ -400,3 +400,21 @@ Post-v4 tracks (v5 candidates):
 - Full LSP server
 - Marketplace publication
 - vars chaining (if use cases emerge)
+
+---
+
+## v5 Status: COMPLETE
+
+See [docs/v5-roadmap.md](docs/v5-roadmap.md) for the full v5
+roadmap and track sequencing.
+
+All three v5 tracks are complete:
+- ✓ Track J: native provider JSON targets (anthropic-messages, openai-chat)
+- ✓ Track K: run command (live API execution, dry-run, response validation)
+- ✓ Track L: lint command (6 static analysis rules, L001–L006)
+
+Post-v5 candidates:
+- Timeout configuration and retry logic for transient network failures
+- Provider-specific lint rules
+- Prompt injection detection
+- Semantic similarity for near-duplicate constraints
