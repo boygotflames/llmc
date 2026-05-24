@@ -268,6 +268,28 @@ VS Code check:
 11. Commit created for the tracked fix:
     - `fix(ci): align bench conformance baseline constants with LF fixtures`
 
+### 2026-05-25 - Packet 44 - Binary release workflow
+
+1. Branch: main
+2. Commit: c4e831a
+3. Tag: v5.0.1 (triggers first release build)
+4. What was done:
+   - .github/workflows/release.yml: 4 platform builds on tag push
+     (x86_64-pc-windows-msvc, x86_64-apple-darwin,
+     aarch64-apple-darwin, x86_64-unknown-linux-musl via cross)
+     Artifacts attached to GitHub Release via softprops/action-gh-release
+   - Cargo.toml: reqwest native-tls → rustls-tls (pure-Rust TLS,
+     enables fully static musl binaries); [profile.release] added
+     with lto=true + strip=true
+   - .github/workflows/ci.yml: cross-platform test matrix added
+     (windows-latest, macos-latest)
+5. Test state: 156 passed / 0 failed
+6. Clippy: clean
+7. Known limitations: no code signing; macOS quarantine xattr;
+   MSVC runtime on Windows
+8. Next: watch Actions for v5.0.1 release build; then Track 2
+   (VS Code marketplace publish)
+
 ### 2026-05-25 - Packet 43 - v5 declaration + merge to main
 
 1. Branch: LLM-v5 → main (merged)
