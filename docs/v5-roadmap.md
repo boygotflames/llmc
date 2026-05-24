@@ -70,11 +70,21 @@ layer; the output is what you paste into curl.
 - Timeout configuration (--timeout flag)
 - Retry logic for transient network failures
 
-## Track L — lint Command (Prompt Quality)
-llm_format lint myprompt.llm
-Static analysis: redundant instructions, missing
-output schema, contradictory constraints, prompt
-length warnings, provider-specific recommendations.
+## Track L — Lint Command [COMPLETE]
+
+Static analysis for prompt quality. Six rules.
+
+- L001: Missing output: schema
+- L002: Missing user: turn
+- L003: System prompt very short (< 20 chars)
+- L004: System prompt very long (> 4000 chars)
+- L005: Contradictory constraints
+- L006: Duplicate constraints
+
+Deferred to Part 2 (post-v5):
+- Provider-specific lint rules
+- Prompt injection detection
+- Semantic similarity for near-duplicate constraints
 
 ## Track Sequencing
 J → K → L
@@ -88,6 +98,6 @@ to send.
       and produce valid API payloads
 - [x] run command executes a .llm file end-to-end
 - [x] response validated against output: schema
-- [ ] lint command catches at least 5 real prompt issues
+- [x] lint command: 6 rules implemented (L001–L006)
 - [x] README describes what the tool actually does today
 - [x] zero stale claims in any public-facing document

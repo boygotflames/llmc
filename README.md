@@ -160,6 +160,25 @@ Canonical formatting — normalize any `.llm` file:
 cargo run -- fmt myprompt.llm
 ```
 
+### lint
+
+Static analysis of prompt quality before execution:
+
+```powershell
+cargo run -- lint myprompt.llm
+```
+
+Checks:
+- **L001** — Missing `output:` schema declaration
+- **L002** — Missing `user:` turn
+- **L003** — System prompt is very short (< 20 chars)
+- **L004** — System prompt is very long (> 4000 chars)
+- **L005** — Contradictory constraints (concise + verbose)
+- **L006** — Duplicate constraints
+
+Warnings are advisory — they do not block transpilation
+or execution. Exit code 0 = clean, 1 = warnings found.
+
 ### bench
 
 Token count analysis against a Markdown baseline:

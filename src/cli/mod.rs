@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 
 pub mod bench;
 pub mod fmt;
+pub mod lint;
 pub mod parse;
 pub mod run;
 pub mod transpile;
@@ -23,6 +24,7 @@ enum Command {
     Fmt(fmt::FmtArgs),
     Bench(bench::BenchArgs),
     Run(run::RunArgs),
+    Lint(lint::LintArgs),
 }
 
 pub fn run() -> Result<()> {
@@ -35,5 +37,6 @@ pub fn run() -> Result<()> {
         Command::Fmt(args) => fmt::run(args),
         Command::Bench(args) => bench::run(args),
         Command::Run(args) => run::run(args),
+        Command::Lint(args) => lint::run(args),
     }
 }
