@@ -101,3 +101,9 @@ to send.
 - [x] lint command: 6 rules implemented (L001–L006)
 - [x] README describes what the tool actually does today
 - [x] zero stale claims in any public-facing document
+
+---
+
+## v5 is COMPLETE as of 2026-05-25
+
+All tracks complete. All success criteria met. 156 tests passing.

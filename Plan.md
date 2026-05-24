@@ -403,21 +403,18 @@ Post-v4 tracks (v5 candidates):
 
 ---
 
-## v5
+## v5 Status: COMPLETE
 
-See [docs/v5-roadmap.md](docs/v5-roadmap.md).
+See [docs/v5-roadmap.md](docs/v5-roadmap.md) for the full v5
+roadmap and track sequencing.
 
-Direction: pivot from format evangelism to practical tooling. Native
-provider JSON targets, live execution, prompt linting.
+All three v5 tracks are complete:
+- ✓ Track J: native provider JSON targets (anthropic-messages, openai-chat)
+- ✓ Track K: run command (live API execution, dry-run, response validation)
+- ✓ Track L: lint command (6 static analysis rules, L001–L006)
 
-Active track: Track J — native provider JSON targets
-
-Estimated packets:
-- Packet 38: Track J — anthropic-messages + openai-chat native JSON targets (2-3 days)
-- Packet 39: Track K Part 1 — reqwest HTTP client, run command scaffold, API key handling
-- Packet 40: Track K Part 2 — response validation against output: schema, exit codes
-- Packet 41: Track L Part 1 — lint command, first 5 prompt quality rules
-- Packet 42: Track L Part 2 — provider-specific rules, contradiction detection
-- Packet 43: v5 declaration, README final pass, release
-
-Total: ~6-7 packets
+Post-v5 candidates:
+- Timeout configuration and retry logic for transient network failures
+- Provider-specific lint rules
+- Prompt injection detection
+- Semantic similarity for near-duplicate constraints

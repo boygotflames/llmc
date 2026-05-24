@@ -2,7 +2,7 @@
 
 ## Current Version
 
-This project is at **v5** (in progress).
+This project is at **v5**.
 
 v0 is an intentional designation, not a placeholder. It means:
 
@@ -122,6 +122,23 @@ All v4 criteria are met as of 2026-04-13:
 2. ✓ VS Code: inlay hints stable; extension v1.0.0
    marketplace-ready (publisher MjirihYoussef)
 3. ✓ CHANGELOG.md v4 entry complete and dated 2026-04-13
+
+---
+
+---
+
+### v5 Status
+
+All v5 criteria are met as of 2026-05-25:
+
+1. ✓ `anthropic-messages` and `openai-chat` targets exist and
+   produce valid API payloads
+2. ✓ `run` command executes a `.llm` file end-to-end against
+   Anthropic and OpenAI APIs
+3. ✓ Response validated against `output:` schema
+4. ✓ `lint` command: 6 rules implemented (L001–L006)
+5. ✓ README and all public docs describe what the tool actually does;
+   zero stale claims
 
 ---
 

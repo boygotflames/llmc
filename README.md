@@ -176,8 +176,9 @@ Checks:
 - **L005** — Contradictory constraints (concise + verbose)
 - **L006** — Duplicate constraints
 
-Warnings are advisory — they do not block transpilation
-or execution. Exit code 0 = clean, 1 = warnings found.
+Warnings are printed to stderr; the command exits with
+code 1 when warnings are found. They do not block
+`transpile` or `run`.
 
 ### bench
 
