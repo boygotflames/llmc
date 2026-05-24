@@ -53,3 +53,17 @@ jobs:
         # conformance suite via locked BENCH_* constants.
         # Any token count or output format change causes
         # a test failure here.
+
+  cross-platform-test:
+    name: Test ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}
+      - run: cargo test --all-targets

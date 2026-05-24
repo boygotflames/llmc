@@ -9,10 +9,14 @@ logos = "0.16.1"          # Blazing fast lexical analyzer
 clap = { version = "4.5", features = ["derive"] } # CLI argument parsing
 tiktoken-rs = "0.11.0"    # Token counting for the benchmark feature
 anyhow = "1.0"            # Easy error handling
-reqwest = { version = "0.12", features = ["blocking", "json"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 [dev-dependencies]
 regex = "1.12"
 tempfile = "3"
+
+[profile.release]
+lto = true    # link-time optimization — reduces binary size
+strip = true  # remove debug symbols from release binary
